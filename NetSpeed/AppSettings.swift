@@ -2,11 +2,39 @@ import Foundation
 import SwiftUI
 
 enum SpeedUnit: String, CaseIterable, Identifiable {
+    case autoBytes
     case bytes
+    case kilobytes
+    case megabytes
+    case gigabytes
+    case autoBits
     case bits
+    case kilobits
+    case megabits
+    case gigabits
 
     var id: Self { self }
-    var title: String { self == .bytes ? "Bytes/s" : "Bits/s" }
+    var title: String {
+        switch self {
+        case .autoBytes: "Auto bytes"
+        case .bytes: "B/s"
+        case .kilobytes: "KB/s"
+        case .megabytes: "MB/s"
+        case .gigabytes: "GB/s"
+        case .autoBits: "Auto bits"
+        case .bits: "bps"
+        case .kilobits: "Kbps"
+        case .megabits: "Mbps"
+        case .gigabits: "Gbps"
+        }
+    }
+
+    var isBitBased: Bool {
+        switch self {
+        case .autoBits, .bits, .kilobits, .megabits, .gigabits: true
+        case .autoBytes, .bytes, .kilobytes, .megabytes, .gigabytes: false
+        }
+    }
 }
 
 enum MenuBarLayout: String, CaseIterable, Identifiable {
@@ -96,6 +124,7 @@ enum AppDefaults {
     static let menuBarFontName = "menuBarFontName"
     static let menuBarFontSize = "menuBarFontSize"
     static let menuBarCondensedWidth = "menuBarCondensedWidth"
+    static let stabilizeMenuBarWidth = "stabilizeMenuBarWidth"
     static let surfaceStyle = "surfaceStyle"
     static let onboardingCompleted = "onboardingCompleted"
     static let showInterfaceName = "showInterfaceName"
@@ -112,14 +141,15 @@ enum AppDefaults {
 extension UserDefaults {
     static func registerNetSpeedDefaults() {
         standard.register(defaults: [
-            AppDefaults.unit: SpeedUnit.bytes.rawValue,
+            AppDefaults.unit: SpeedUnit.autoBytes.rawValue,
             AppDefaults.menuBarLayout: MenuBarLayout.stacked.rawValue,
             AppDefaults.menuBarIconPosition: MenuBarIconPosition.hidden.rawValue,
             AppDefaults.showUnitLabels: true,
             AppDefaults.menuBarFontMode: MenuBarFontMode.condensed.rawValue,
             AppDefaults.menuBarFontName: "",
-            AppDefaults.menuBarFontSize: 9.0,
-            AppDefaults.menuBarCondensedWidth: 0.82,
+            AppDefaults.menuBarFontSize: 10.0,
+            AppDefaults.menuBarCondensedWidth: 0.74,
+            AppDefaults.stabilizeMenuBarWidth: true,
             AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,
             AppDefaults.onboardingCompleted: false,
             AppDefaults.showInterfaceName: true,

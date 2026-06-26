@@ -8,8 +8,8 @@ struct GeneralSettingsPane: View {
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
     @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
     @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
-    @AppStorage(AppDefaults.menuBarCondensedWidth) private var condensedWidth = 0.82
-    @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.bytes.rawValue
+    @AppStorage(AppDefaults.stabilizeMenuBarWidth) private var stabilizeMenuBarWidth = true
+    @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.autoBytes.rawValue
     @State private var launchAtLogin = LaunchAtLoginManager.isEnabled
     @State private var launchError: String?
 
@@ -18,14 +18,15 @@ struct GeneralSettingsPane: View {
             Section("Menu Bar") {
                 Picker("Layout", selection: $menuBarLayout) { ForEach(MenuBarLayout.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 Picker("Icon position", selection: $iconPosition) { ForEach(MenuBarIconPosition.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Picker("Units", selection: $unit) { ForEach(SpeedUnit.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Picker("Units", selection: $unit) { ForEach(SpeedUnit.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.menu)
                 Toggle("Show unit labels", isOn: $showUnitLabels).toggleStyle(.switch)
+                Toggle("Keep menu bar width stable", isOn: $stabilizeMenuBarWidth).toggleStyle(.switch)
             }
             Section("Menu Bar Font") {
                 Picker("Font", selection: $fontMode) { ForEach(MenuBarFontMode.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 LabeledContent("Size") { Slider(value: $fontSize, in: 7...15, step: 0.5).frame(width: 180); Text("\(fontSize, specifier: "%.1f") pt").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing) }
                 if MenuBarFontMode(rawValue: fontMode) == .condensed {
-                    LabeledContent("Condensed width") { Slider(value: $condensedWidth, in: 0.62...1.0, step: 0.02).frame(width: 180); Text("\(Int(condensedWidth * 100))%").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing) }
+                    Text("Uses Avenir Next Condensed, a built-in macOS font with taller, narrower glyphs.").font(.caption).foregroundStyle(.secondary)
                 }
                 HStack(spacing: 8) {
                     Button("Choose Custom Font...") { FontPickerController.shared.show() }.controlSize(.small)
@@ -53,12 +54,11 @@ struct GeneralSettingsPane: View {
 
 private struct MenuBarFontPreview: View {
     @AppStorage(AppDefaults.menuBarLayout) private var layout = MenuBarLayout.stacked.rawValue
-    @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.bytes.rawValue
+    @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.autoBytes.rawValue
     @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
     @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
     @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
-    @AppStorage(AppDefaults.menuBarCondensedWidth) private var condensedWidth = 0.82
 
     private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .bytes }
     private var up: String { SpeedFormatter.speedValue(815 * 1024, unit: unit, showsUnit: showUnitLabels) }
@@ -76,7 +76,7 @@ private struct MenuBarFontPreview: View {
                     .background(.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             }
         }
-        .id("\(layout)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)-\(condensedWidth)")
+        .id("\(layout)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)")
     }
 
     @ViewBuilder

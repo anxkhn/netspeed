@@ -44,6 +44,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let up = SpeedFormatter.speedValue(sample.uploadBytesPerSecond, unit: unit, showsUnit: showUnits)
         let down = SpeedFormatter.speedValue(sample.downloadBytesPerSecond, unit: unit, showsUnit: showUnits)
         let font = MenuBarFont.nsFont(size: layout == .stacked ? nil : max(10, UserDefaults.standard.double(forKey: AppDefaults.menuBarFontSize)))
+        updateReservedWidth(layout: layout, unit: unit, showsUnit: showUnits, iconPosition: iconPosition, font: font)
         if iconPosition == .hidden {
             button.image = nil
         } else {
@@ -80,5 +81,51 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .font: font,
             .foregroundColor: NSColor.labelColor,
         ])
+    }
+
+    private func updateReservedWidth(layout: MenuBarLayout, unit: SpeedUnit, showsUnit: Bool, iconPosition: MenuBarIconPosition, font: NSFont) {
+        guard UserDefaults.standard.bool(forKey: AppDefaults.stabilizeMenuBarWidth) else {
+            statusItem.length = NSStatusItem.variableLength
+            return
+        }
+
+        let referenceDown = referenceSpeed(unit: unit, showsUnit: showsUnit)
+        let referenceUp = referenceSpeed(unit: unit, showsUnit: showsUnit)
+        let text: String
+        switch layout {
+        case .stacked:
+            text = maxWidthLine("↑ \(referenceUp)", "↓ \(referenceDown)")
+        case .compact:
+            text = "↓ \(referenceDown)  ↑ \(referenceUp)"
+        case .downloadOnly:
+            text = "↓ \(referenceDown)"
+        }
+
+        let width = ceil((text as NSString).size(withAttributes: [.font: font]).width)
+        let iconAllowance: CGFloat = iconPosition == .hidden ? 0 : 22
+        let padding: CGFloat = layout == .stacked ? 12 : 18
+        statusItem.length = max(44, width + iconAllowance + padding)
+    }
+
+    private func referenceSpeed(unit: SpeedUnit, showsUnit: Bool) -> String {
+        let bytes: UInt64
+        switch unit {
+        case .bytes, .bits:
+            bytes = 999
+        case .kilobytes, .kilobits:
+            bytes = 999 * 1024
+        case .megabytes, .megabits, .autoBytes, .autoBits:
+            bytes = 999 * 1024 * 1024
+        case .gigabytes, .gigabits:
+            bytes = 99 * 1024 * 1024 * 1024
+        }
+        return SpeedFormatter.speedValue(bytes, unit: unit, showsUnit: showsUnit)
+    }
+
+    private func maxWidthLine(_ first: String, _ second: String) -> String {
+        let font = MenuBarFont.nsFont()
+        let firstWidth = (first as NSString).size(withAttributes: [.font: font]).width
+        let secondWidth = (second as NSString).size(withAttributes: [.font: font]).width
+        return firstWidth >= secondWidth ? first : second
     }
 }

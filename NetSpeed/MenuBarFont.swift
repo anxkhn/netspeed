@@ -11,12 +11,12 @@ enum MenuBarFont {
         case .system:
             return NSFont.systemFont(ofSize: resolvedSize, weight: .medium)
         case .condensed:
-            return condensedSystemFont(size: resolvedSize)
+            return builtInCondensedFont(size: resolvedSize)
         case .monospaced:
             return NSFont.monospacedDigitSystemFont(ofSize: resolvedSize, weight: .medium)
         case .custom:
             let name = defaults.string(forKey: AppDefaults.menuBarFontName) ?? ""
-            return NSFont(name: name, size: resolvedSize) ?? condensedSystemFont(size: resolvedSize)
+            return NSFont(name: name, size: resolvedSize) ?? builtInCondensedFont(size: resolvedSize)
         }
     }
 
@@ -28,21 +28,27 @@ enum MenuBarFont {
         case .system:
             return .system(size: resolvedSize, weight: .medium, design: .default)
         case .condensed:
-            return .system(size: resolvedSize, weight: .medium, design: .default).width(.condensed)
+            return .custom("AvenirNextCondensed-Medium", size: resolvedSize)
         case .monospaced:
             return .system(size: resolvedSize, weight: .medium, design: .monospaced)
         case .custom:
             let name = defaults.string(forKey: AppDefaults.menuBarFontName) ?? ""
-            return name.isEmpty ? .system(size: resolvedSize, weight: .medium).width(.condensed) : .custom(name, size: resolvedSize)
+            return name.isEmpty ? .custom("AvenirNextCondensed-Medium", size: resolvedSize) : .custom(name, size: resolvedSize)
         }
     }
 
-    private static func condensedSystemFont(size: CGFloat) -> NSFont {
-        let width = CGFloat(UserDefaults.standard.double(forKey: AppDefaults.menuBarCondensedWidth))
+    private static func builtInCondensedFont(size: CGFloat) -> NSFont {
+        let candidates = [
+            "AvenirNextCondensed-Medium",
+            "AvenirNextCondensed-DemiBold",
+            "HelveticaNeue-CondensedBold",
+            "HelveticaNeue-CondensedBlack",
+        ]
+        for name in candidates {
+            if let font = NSFont(name: name, size: size) { return font }
+        }
         let base = NSFont.systemFont(ofSize: size, weight: .medium)
-        let descriptor = base.fontDescriptor.addingAttributes([
-            .traits: [NSFontDescriptor.TraitKey.width: max(0.62, min(1.0, width))]
-        ])
+        let descriptor = base.fontDescriptor.withSymbolicTraits(.condensed)
         return NSFont(descriptor: descriptor, size: size) ?? base
     }
 }

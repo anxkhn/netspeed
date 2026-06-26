@@ -5,7 +5,7 @@ struct VisualizerView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var monitor = NetworkMonitor.shared
     @State private var connection = ConnectionMonitor.shared
-    @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.bytes.rawValue
+    @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.autoBytes.rawValue
     @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @State private var showUpload = true
     @State private var showDownload = true
@@ -62,8 +62,8 @@ struct VisualizerView: View {
         .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: monitor.samples.count)
     }
 
-    private func scaled(_ bytes: UInt64) -> Double { Double(bytes) * (unit == .bits ? 8 : 1) }
-    private func label(_ value: Double) -> String { SpeedFormatter.speedValue(UInt64(value / (unit == .bits ? 8 : 1)), unit: unit, showsUnit: showUnitLabels) }
+    private func scaled(_ bytes: UInt64) -> Double { Double(bytes) * (unit.isBitBased ? 8 : 1) }
+    private func label(_ value: Double) -> String { SpeedFormatter.speedValue(UInt64(value / (unit.isBitBased ? 8 : 1)), unit: unit, showsUnit: showUnitLabels) }
 }
 
 private struct StatBlock: View {
