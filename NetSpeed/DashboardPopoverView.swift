@@ -11,23 +11,22 @@ struct DashboardPopoverView: View {
     private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .bytes }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 13) {
             header
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 SpeedCard(title: "Download", value: speed(monitor.current.downloadBytesPerSecond), color: .blue)
                 SpeedCard(title: "Upload", value: speed(monitor.current.uploadBytesPerSecond), color: .pink)
             }
             MiniChart(samples: monitor.samples, unit: unit, showsUnitLabels: showUnitLabels)
-                .frame(height: 158)
+                .frame(height: 124)
             infoRows
             Divider().opacity(0.45)
             actionRows
         }
-        .padding(18)
-        .frame(width: 430)
-        .adaptiveGlassBackground()
-        .padding(8)
-        .background(.clear)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .frame(width: 348)
+        .background(.regularMaterial)
         .preferredColorScheme(AppTheme(rawValue: UserDefaults.standard.string(forKey: AppDefaults.appTheme) ?? "")?.colorScheme)
         .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: monitor.current.downloadBytesPerSecond)
     }
@@ -36,15 +35,15 @@ struct DashboardPopoverView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 5) {
                 Text("NetSpeed")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
                 Text("\(connection.status) · \(connection.localIPAddress)")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer()
             Image(systemName: "globe")
-                .font(.system(size: 32, weight: .semibold))
+                .font(.system(size: 26, weight: .semibold))
                 .symbolRenderingMode(.hierarchical)
                 .foregroundStyle(.secondary)
         }
@@ -56,7 +55,7 @@ struct DashboardPopoverView: View {
             DashboardRow(title: "Interface", value: monitor.current.interfaceName)
             DashboardRow(title: "Public IP", value: connection.publicIPAddress)
         }
-        .font(.system(size: 13, weight: .semibold, design: .rounded))
+        .font(.system(size: 12, weight: .semibold, design: .rounded))
     }
 
     private var actionRows: some View {
@@ -78,7 +77,7 @@ private struct DashboardRow: View {
     let value: String
     var body: some View {
         GridRow {
-            Text(title).foregroundStyle(.secondary).frame(width: 78, alignment: .leading)
+            Text(title).foregroundStyle(.secondary).frame(width: 66, alignment: .leading)
             Text(value).lineLimit(1).truncationMode(.middle)
         }
     }
@@ -89,14 +88,14 @@ private struct SpeedCard: View {
     let value: String
     let color: Color
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 24, weight: .bold, design: .rounded)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.secondary)
+            Text(value).font(.system(size: 20, weight: .bold, design: .rounded)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 16)
-        .background(color.opacity(0.16), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
     }
 }
 
@@ -110,13 +109,13 @@ private struct MenuActionRow: View {
         Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: symbol).frame(width: 20)
-                Text(title).font(.system(size: 16, weight: .semibold, design: .rounded))
+                Text(title).font(.system(size: 14, weight: .semibold, design: .rounded))
                 Spacer()
                 if !trailing.isEmpty { Text(trailing).foregroundStyle(.tertiary).font(.system(size: 14, weight: .semibold, design: .rounded)) }
             }
             .contentShape(Rectangle())
             .padding(.horizontal, 8)
-            .padding(.vertical, 7)
+            .padding(.vertical, 5)
         }
         .buttonStyle(.plain)
     }

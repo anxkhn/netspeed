@@ -10,7 +10,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     override init() {
         super.init()
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 390, height: 430)
+        popover.contentSize = NSSize(width: 348, height: 410)
         popover.delegate = self
         popover.contentViewController = NSHostingController(rootView: DashboardPopoverView())
 
@@ -43,6 +43,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let showUnits = UserDefaults.standard.bool(forKey: AppDefaults.showUnitLabels)
         let up = SpeedFormatter.speedValue(sample.uploadBytesPerSecond, unit: unit, showsUnit: showUnits)
         let down = SpeedFormatter.speedValue(sample.downloadBytesPerSecond, unit: unit, showsUnit: showUnits)
+        let font = MenuBarFont.nsFont(size: layout == .stacked ? nil : max(10, UserDefaults.standard.double(forKey: AppDefaults.menuBarFontSize)))
         if iconPosition == .hidden {
             button.image = nil
         } else {
@@ -56,9 +57,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         case .stacked:
             button.attributedTitle = stackedTitle(up: up, down: down)
         case .compact:
-            button.title = "↓ \(down)  ↑ \(up)"
+            button.attributedTitle = singleLineTitle("↓ \(down)  ↑ \(up)", font: font)
         case .downloadOnly:
-            button.title = "↓ \(down)"
+            button.attributedTitle = singleLineTitle("↓ \(down)", font: font)
         }
     }
 
@@ -66,11 +67,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let style = NSMutableParagraphStyle()
         style.alignment = .right
         style.lineHeightMultiple = 0.72
-        let base: [NSAttributedString.Key: Any] = [.font: NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium), .foregroundColor: NSColor.labelColor, .paragraphStyle: style]
+        let base: [NSAttributedString.Key: Any] = [.font: MenuBarFont.nsFont(), .foregroundColor: NSColor.labelColor, .paragraphStyle: style]
         let output = NSMutableAttributedString(string: "↑ \(up)\n", attributes: base)
         var lower = base
         lower[.baselineOffset] = -5
         output.append(NSAttributedString(string: "↓ \(down)", attributes: lower))
         return output
+    }
+
+    private func singleLineTitle(_ text: String, font: NSFont) -> NSAttributedString {
+        NSAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: NSColor.labelColor,
+        ])
     }
 }

@@ -54,6 +54,23 @@ enum SurfaceStyle: String, CaseIterable, Identifiable {
     }
 }
 
+enum MenuBarFontMode: String, CaseIterable, Identifiable {
+    case system
+    case condensed
+    case monospaced
+    case custom
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .condensed: "Condensed"
+        case .monospaced: "Monospaced"
+        case .custom: "Custom"
+        }
+    }
+}
+
 enum AppTheme: String, CaseIterable, Identifiable {
     case system
     case light
@@ -75,6 +92,10 @@ enum AppDefaults {
     static let menuBarLayout = "menuBarLayout"
     static let menuBarIconPosition = "menuBarIconPosition"
     static let showUnitLabels = "showUnitLabels"
+    static let menuBarFontMode = "menuBarFontMode"
+    static let menuBarFontName = "menuBarFontName"
+    static let menuBarFontSize = "menuBarFontSize"
+    static let menuBarCondensedWidth = "menuBarCondensedWidth"
     static let surfaceStyle = "surfaceStyle"
     static let onboardingCompleted = "onboardingCompleted"
     static let showInterfaceName = "showInterfaceName"
@@ -95,6 +116,10 @@ extension UserDefaults {
             AppDefaults.menuBarLayout: MenuBarLayout.stacked.rawValue,
             AppDefaults.menuBarIconPosition: MenuBarIconPosition.hidden.rawValue,
             AppDefaults.showUnitLabels: true,
+            AppDefaults.menuBarFontMode: MenuBarFontMode.condensed.rawValue,
+            AppDefaults.menuBarFontName: "",
+            AppDefaults.menuBarFontSize: 9.0,
+            AppDefaults.menuBarCondensedWidth: 0.82,
             AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,
             AppDefaults.onboardingCompleted: false,
             AppDefaults.showInterfaceName: true,
