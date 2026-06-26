@@ -39,8 +39,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let sample = NetworkMonitor.shared.current
         let unit = SpeedUnit(rawValue: UserDefaults.standard.string(forKey: AppDefaults.unit) ?? "") ?? .bytes
         let layout = MenuBarLayout(rawValue: UserDefaults.standard.string(forKey: AppDefaults.menuBarLayout) ?? "") ?? .stacked
-        let up = SpeedFormatter.speed(sample.uploadBytesPerSecond, unit: unit)
-        let down = SpeedFormatter.speed(sample.downloadBytesPerSecond, unit: unit)
+        let iconPosition = MenuBarIconPosition(rawValue: UserDefaults.standard.string(forKey: AppDefaults.menuBarIconPosition) ?? "") ?? .hidden
+        let showUnits = UserDefaults.standard.bool(forKey: AppDefaults.showUnitLabels)
+        let up = SpeedFormatter.speedValue(sample.uploadBytesPerSecond, unit: unit, showsUnit: showUnits)
+        let down = SpeedFormatter.speedValue(sample.downloadBytesPerSecond, unit: unit, showsUnit: showUnits)
+        if iconPosition == .hidden {
+            button.image = nil
+        } else {
+            let image = NSImage(systemSymbolName: "network", accessibilityDescription: "NetSpeed")
+            image?.isTemplate = true
+            button.image = image
+            button.imagePosition = iconPosition == .left ? .imageLeft : .imageRight
+        }
 
         switch layout {
         case .stacked:

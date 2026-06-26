@@ -14,6 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AlertManager.shared.requestAuthorization()
         updater.start()
         statusController = StatusItemController()
+        if !UserDefaults.standard.bool(forKey: AppDefaults.onboardingCompleted) {
+            OnboardingWindowController.show()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

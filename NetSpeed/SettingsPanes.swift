@@ -3,6 +3,8 @@ import SwiftUI
 
 struct GeneralSettingsPane: View {
     @AppStorage(AppDefaults.menuBarLayout) private var menuBarLayout = MenuBarLayout.stacked.rawValue
+    @AppStorage(AppDefaults.menuBarIconPosition) private var iconPosition = MenuBarIconPosition.hidden.rawValue
+    @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.bytes.rawValue
     @State private var launchAtLogin = LaunchAtLoginManager.isEnabled
     @State private var launchError: String?
@@ -11,7 +13,9 @@ struct GeneralSettingsPane: View {
         Form {
             Section("Menu Bar") {
                 Picker("Layout", selection: $menuBarLayout) { ForEach(MenuBarLayout.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Picker("Icon position", selection: $iconPosition) { ForEach(MenuBarIconPosition.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 Picker("Units", selection: $unit) { ForEach(SpeedUnit.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Toggle("Show unit labels", isOn: $showUnitLabels).toggleStyle(.switch)
             }
             Section("System") {
                 Toggle(isOn: Binding(get: { launchAtLogin }, set: { enabled in setLaunchAtLogin(enabled) })) {
@@ -34,11 +38,15 @@ struct GeneralSettingsPane: View {
 struct AppearanceSettingsPane: View {
     @AppStorage(AppDefaults.appTheme) private var theme = AppTheme.system.rawValue
     @AppStorage(AppDefaults.accentColorName) private var accent = "blue"
+    @AppStorage(AppDefaults.surfaceStyle) private var surfaceStyle = SurfaceStyle.system.rawValue
     var body: some View {
         Form {
             Section("Theme") { Picker("Appearance", selection: $theme) { ForEach(AppTheme.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented) }
+            Section("Surface") {
+                Picker("Material", selection: $surfaceStyle) { ForEach(SurfaceStyle.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Text("System follows macOS Reduce Transparency. Transparent uses Liquid Glass where available; Opaque prefers contrast and legibility.").font(.caption).foregroundStyle(.secondary)
+            }
             Section("Accent") { Picker("Chart Accent", selection: $accent) { Text("Blue").tag("blue"); Text("Pink").tag("pink"); Text("Green").tag("green"); Text("Orange").tag("orange") }.pickerStyle(.segmented) }
-            Section("Liquid Glass") { Text("Settings, dashboard, and visualizer use transparent grouped forms and full-size AppKit window chrome on macOS 26.").foregroundStyle(.secondary) }
         }.settingsForm()
     }
 }
@@ -145,6 +153,7 @@ struct UpdatesSettingsPane: View {
 }
 
 struct AboutSettingsPane: View {
+    @AppStorage(AppDefaults.onboardingCompleted) private var onboardingCompleted = false
     var body: some View {
         Form {
             Section {
@@ -156,6 +165,7 @@ struct AboutSettingsPane: View {
             Section("Project") {
                 Link("GitHub", destination: URL(string: "https://github.com/anxkhn/netspeed")!)
                 Link("GPLv3 License", destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!)
+                Button("Show Onboarding Again") { onboardingCompleted = false; OnboardingWindowController.show() }.controlSize(.small)
             }
         }.settingsForm()
     }

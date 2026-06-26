@@ -15,6 +15,14 @@ enum SpeedFormatter {
         return String(format: "%.0f %@", scaled, suffixes[index])
     }
 
+    static func speedValue(_ bytesPerSecond: UInt64, unit: SpeedUnit, showsUnit: Bool) -> String {
+        guard showsUnit else {
+            let formatted = speed(bytesPerSecond, unit: unit)
+            return formatted.split(separator: " ").first.map(String.init) ?? formatted
+        }
+        return speed(bytesPerSecond, unit: unit)
+    }
+
     static func bytes(_ bytes: UInt64) -> String {
         ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
     }

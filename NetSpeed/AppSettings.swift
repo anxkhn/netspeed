@@ -24,6 +24,36 @@ enum MenuBarLayout: String, CaseIterable, Identifiable {
     }
 }
 
+enum MenuBarIconPosition: String, CaseIterable, Identifiable {
+    case hidden
+    case left
+    case right
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .hidden: "Hidden"
+        case .left: "Left"
+        case .right: "Right"
+        }
+    }
+}
+
+enum SurfaceStyle: String, CaseIterable, Identifiable {
+    case system
+    case transparent
+    case opaque
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .system: "System"
+        case .transparent: "Transparent"
+        case .opaque: "Opaque"
+        }
+    }
+}
+
 enum AppTheme: String, CaseIterable, Identifiable {
     case system
     case light
@@ -43,6 +73,10 @@ enum AppTheme: String, CaseIterable, Identifiable {
 enum AppDefaults {
     static let unit = "unit"
     static let menuBarLayout = "menuBarLayout"
+    static let menuBarIconPosition = "menuBarIconPosition"
+    static let showUnitLabels = "showUnitLabels"
+    static let surfaceStyle = "surfaceStyle"
+    static let onboardingCompleted = "onboardingCompleted"
     static let showInterfaceName = "showInterfaceName"
     static let showPublicIP = "showPublicIP"
     static let alertEnabled = "alertEnabled"
@@ -59,6 +93,10 @@ extension UserDefaults {
         standard.register(defaults: [
             AppDefaults.unit: SpeedUnit.bytes.rawValue,
             AppDefaults.menuBarLayout: MenuBarLayout.stacked.rawValue,
+            AppDefaults.menuBarIconPosition: MenuBarIconPosition.hidden.rawValue,
+            AppDefaults.showUnitLabels: true,
+            AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,
+            AppDefaults.onboardingCompleted: false,
             AppDefaults.showInterfaceName: true,
             AppDefaults.showPublicIP: false,
             AppDefaults.alertEnabled: false,

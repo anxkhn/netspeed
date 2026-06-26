@@ -2,9 +2,11 @@ import Charts
 import SwiftUI
 
 struct VisualizerView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var monitor = NetworkMonitor.shared
     @State private var connection = ConnectionMonitor.shared
     @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.bytes.rawValue
+    @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @State private var showUpload = true
     @State private var showDownload = true
 
@@ -36,6 +38,14 @@ struct VisualizerView: View {
                         .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
                 }
             }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .minute)) { value in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 0.6, dash: [4, 5]))
+                    AxisValueLabel {
+                        if let date = value.as(Date.self) { Text(date, format: .dateTime.hour().minute()).font(.caption.monospacedDigit()) }
+                    }
+                }
+            }
             .chartYAxis { AxisMarks { value in AxisGridLine(); AxisValueLabel { if let v = value.as(Double.self) { Text(label(v)) } } } }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -49,10 +59,11 @@ struct VisualizerView: View {
         }
         .padding(24)
         .background(.regularMaterial)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.2), value: monitor.samples.count)
     }
 
     private func scaled(_ bytes: UInt64) -> Double { Double(bytes) * (unit == .bits ? 8 : 1) }
-    private func label(_ value: Double) -> String { SpeedFormatter.speed(UInt64(value / (unit == .bits ? 8 : 1)), unit: unit) }
+    private func label(_ value: Double) -> String { SpeedFormatter.speedValue(UInt64(value / (unit == .bits ? 8 : 1)), unit: unit, showsUnit: showUnitLabels) }
 }
 
 private struct StatBlock: View {
