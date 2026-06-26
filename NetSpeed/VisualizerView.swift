@@ -28,14 +28,17 @@ struct VisualizerView: View {
                 if showDownload {
                     AreaMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
                         .foregroundStyle(.blue.opacity(0.16))
+                        .interpolationMethod(.catmullRom)
                     LineMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
                         .foregroundStyle(.blue)
                         .lineStyle(StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                        .interpolationMethod(.catmullRom)
                 }
                 if showUpload {
                     LineMark(x: .value("Time", sample.timestamp), y: .value("Upload", scaled(sample.uploadBytesPerSecond)))
                         .foregroundStyle(.pink)
                         .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+                        .interpolationMethod(.catmullRom)
                 }
             }
             .chartXAxis {

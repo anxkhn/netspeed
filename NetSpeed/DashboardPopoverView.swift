@@ -130,12 +130,15 @@ struct MiniChart: View {
         Chart(samples.suffix(90)) { sample in
             AreaMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
                 .foregroundStyle(.blue.opacity(0.12))
+                .interpolationMethod(.catmullRom)
             LineMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
                 .foregroundStyle(.blue)
                 .lineStyle(StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                .interpolationMethod(.catmullRom)
             LineMark(x: .value("Time", sample.timestamp), y: .value("Upload", scaled(sample.uploadBytesPerSecond)))
                 .foregroundStyle(.pink.opacity(0.9))
                 .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                .interpolationMethod(.catmullRom)
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: .minute)) { value in
