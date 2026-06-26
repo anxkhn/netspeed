@@ -60,9 +60,11 @@ struct DashboardPopoverView: View {
 
     private var actionRows: some View {
         VStack(spacing: 4) {
-            MenuActionRow(title: "Visualizer", symbol: "chart.xyaxis.line") { VisualizerWindowController.show() }
-            MenuActionRow(title: "Settings...", symbol: "gearshape", trailing: "⌘,") { SettingsWindowController.show(tab: .general) }
             MenuActionRow(title: "Refresh", symbol: "arrow.clockwise") { ConnectionMonitor.shared.refreshPublicIPIfNeeded() }
+            Divider().opacity(0.35)
+            MenuActionRow(title: "Open Visualizer", symbol: "chart.xyaxis.line") { VisualizerWindowController.show() }
+            MenuActionRow(title: "Settings...", symbol: "gearshape", trailing: "⌘,") { SettingsWindowController.show(tab: .general) }
+            Divider().opacity(0.35)
             MenuActionRow(title: "Quit", symbol: "xmark.square", trailing: "⌘Q") { NSApp.terminate(nil) }
         }
     }

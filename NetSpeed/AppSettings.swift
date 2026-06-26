@@ -121,7 +121,6 @@ enum AppDefaults {
     static let menuBarFontMode = "menuBarFontMode"
     static let menuBarFontName = "menuBarFontName"
     static let menuBarFontSize = "menuBarFontSize"
-    static let menuBarCondensedWidth = "menuBarCondensedWidth"
     static let stabilizeMenuBarWidth = "stabilizeMenuBarWidth"
     static let smoothMenuBarTransitions = "smoothMenuBarTransitions"
     static let surfaceStyle = "surfaceStyle"
@@ -147,7 +146,6 @@ extension UserDefaults {
             AppDefaults.menuBarFontMode: MenuBarFontMode.condensed.rawValue,
             AppDefaults.menuBarFontName: "",
             AppDefaults.menuBarFontSize: 10.0,
-            AppDefaults.menuBarCondensedWidth: 0.74,
             AppDefaults.stabilizeMenuBarWidth: true,
             AppDefaults.smoothMenuBarTransitions: true,
             AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,

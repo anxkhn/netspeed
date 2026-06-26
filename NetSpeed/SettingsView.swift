@@ -2,11 +2,12 @@ import AppKit
 import SwiftUI
 
 enum SettingsTab: String, CaseIterable, Identifiable {
-    case general, appearance, network, alerts, history, updates, about
+    case general, menuBar, appearance, network, alerts, history, updates, about
     var id: Self { self }
     var title: String {
         switch self {
         case .general: "General"
+        case .menuBar: "Menu Bar"
         case .appearance: "Appearance"
         case .network: "Network"
         case .alerts: "Alerts"
@@ -18,6 +19,7 @@ enum SettingsTab: String, CaseIterable, Identifiable {
     var systemImage: String {
         switch self {
         case .general: "gearshape"
+        case .menuBar: "menubar.rectangle"
         case .appearance: "paintbrush"
         case .network: "network"
         case .alerts: "bell.badge"
@@ -94,6 +96,7 @@ private struct SettingsDetailView: View {
         Group {
             switch tab {
             case .general: GeneralSettingsPane()
+            case .menuBar: MenuBarSettingsPane()
             case .appearance: AppearanceSettingsPane()
             case .network: NetworkSettingsPane()
             case .alerts: AlertsSettingsPane()

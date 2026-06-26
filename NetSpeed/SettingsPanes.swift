@@ -2,41 +2,12 @@ import AppKit
 import SwiftUI
 
 struct GeneralSettingsPane: View {
-    @AppStorage(AppDefaults.menuBarLayout) private var menuBarLayout = MenuBarLayout.stacked.rawValue
-    @AppStorage(AppDefaults.menuBarArrowPosition) private var arrowPosition = MenuBarArrowPosition.left.rawValue
-    @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
-    @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
-    @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
-    @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
-    @AppStorage(AppDefaults.stabilizeMenuBarWidth) private var stabilizeMenuBarWidth = true
-    @AppStorage(AppDefaults.smoothMenuBarTransitions) private var smoothMenuBarTransitions = true
-    @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.autoBytes.rawValue
+    @AppStorage(AppDefaults.onboardingCompleted) private var onboardingCompleted = false
     @State private var launchAtLogin = LaunchAtLoginManager.isEnabled
     @State private var launchError: String?
 
     var body: some View {
         Form {
-            Section("Menu Bar") {
-                Picker("Layout", selection: $menuBarLayout) { ForEach(MenuBarLayout.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Picker("Arrow position", selection: $arrowPosition) { ForEach(MenuBarArrowPosition.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Picker("Units", selection: $unit) { ForEach(SpeedUnit.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.menu)
-                Toggle("Show unit labels", isOn: $showUnitLabels).toggleStyle(.switch)
-                Toggle("Keep menu bar width stable", isOn: $stabilizeMenuBarWidth).toggleStyle(.switch)
-                Toggle("Smooth speed changes", isOn: $smoothMenuBarTransitions).toggleStyle(.switch)
-                Text("Smooth changes fade the menu bar text between speed updates. This is automatically disabled when Reduce Motion is enabled in macOS.").font(.caption).foregroundStyle(.secondary)
-            }
-            Section("Menu Bar Font") {
-                Picker("Font", selection: $fontMode) { ForEach(MenuBarFontMode.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                LabeledContent("Size") { Slider(value: $fontSize, in: 7...15, step: 0.5).frame(width: 180); Text("\(fontSize, specifier: "%.1f") pt").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing) }
-                if MenuBarFontMode(rawValue: fontMode) == .condensed {
-                    Text("Uses Avenir Next Condensed, a built-in macOS font with taller, narrower glyphs.").font(.caption).foregroundStyle(.secondary)
-                }
-                HStack(spacing: 8) {
-                    Button("Choose Custom Font...") { FontPickerController.shared.show() }.controlSize(.small)
-                    if !customFontName.isEmpty { Text(customFontName).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }
-                }
-                MenuBarFontPreview()
-            }
             Section("System") {
                 Toggle(isOn: Binding(get: { launchAtLogin }, set: { enabled in setLaunchAtLogin(enabled) })) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -46,12 +17,97 @@ struct GeneralSettingsPane: View {
                 }.toggleStyle(.switch)
                 if let launchError { Text(launchError).font(.caption).foregroundStyle(.red) }
             }
+            Section("Setup") {
+                Button("Show Onboarding Again") { onboardingCompleted = false; OnboardingWindowController.show() }.controlSize(.small)
+                Text("Onboarding walks through notifications, launch at login, public IP display, and the main app windows.").font(.caption).foregroundStyle(.secondary)
+            }
         }.settingsForm()
     }
 
     private func setLaunchAtLogin(_ enabled: Bool) {
         do { try LaunchAtLoginManager.setEnabled(enabled); launchAtLogin = LaunchAtLoginManager.isEnabled; launchError = nil }
         catch { launchError = error.localizedDescription; launchAtLogin = LaunchAtLoginManager.isEnabled }
+    }
+}
+
+struct MenuBarSettingsPane: View {
+    @AppStorage(AppDefaults.menuBarLayout) private var menuBarLayout = MenuBarLayout.stacked.rawValue
+    @AppStorage(AppDefaults.menuBarArrowPosition) private var arrowPosition = MenuBarArrowPosition.left.rawValue
+    @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
+    @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
+    @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
+    @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
+    @AppStorage(AppDefaults.stabilizeMenuBarWidth) private var stabilizeMenuBarWidth = true
+    @AppStorage(AppDefaults.smoothMenuBarTransitions) private var smoothMenuBarTransitions = true
+    @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.autoBytes.rawValue
+
+    var body: some View {
+        Form {
+            Section("Preview") {
+                MenuBarFontPreview()
+            }
+
+            Section("Content") {
+                Picker("Layout", selection: $menuBarLayout) {
+                    ForEach(MenuBarLayout.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented)
+
+                Picker("Arrow position", selection: $arrowPosition) {
+                    ForEach(MenuBarArrowPosition.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.segmented)
+
+                Picker("Units", selection: $unit) {
+                    Section("Automatic") {
+                        Text(SpeedUnit.autoBytes.title).tag(SpeedUnit.autoBytes.rawValue)
+                        Text(SpeedUnit.autoBits.title).tag(SpeedUnit.autoBits.rawValue)
+                    }
+                    Section("Bytes") {
+                        Text(SpeedUnit.bytes.title).tag(SpeedUnit.bytes.rawValue)
+                        Text(SpeedUnit.kilobytes.title).tag(SpeedUnit.kilobytes.rawValue)
+                        Text(SpeedUnit.megabytes.title).tag(SpeedUnit.megabytes.rawValue)
+                        Text(SpeedUnit.gigabytes.title).tag(SpeedUnit.gigabytes.rawValue)
+                    }
+                    Section("Bits") {
+                        Text(SpeedUnit.bits.title).tag(SpeedUnit.bits.rawValue)
+                        Text(SpeedUnit.kilobits.title).tag(SpeedUnit.kilobits.rawValue)
+                        Text(SpeedUnit.megabits.title).tag(SpeedUnit.megabits.rawValue)
+                        Text(SpeedUnit.gigabits.title).tag(SpeedUnit.gigabits.rawValue)
+                    }
+                }
+                .pickerStyle(.menu)
+
+                Toggle("Show unit labels", isOn: $showUnitLabels).toggleStyle(.switch)
+            }
+
+            Section("Typography") {
+                Picker("Font", selection: $fontMode) {
+                    ForEach(MenuBarFontMode.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                .pickerStyle(.menu)
+
+                LabeledContent("Size") {
+                    Slider(value: $fontSize, in: 7...15, step: 0.5).frame(width: 180)
+                    Text("\(fontSize, specifier: "%.1f") pt").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing)
+                }
+
+                if MenuBarFontMode(rawValue: fontMode) == .condensed {
+                    Text("Uses Avenir Next Condensed, a built-in macOS font with taller, narrower glyphs.").font(.caption).foregroundStyle(.secondary)
+                }
+
+                HStack(spacing: 8) {
+                    Button("Choose Custom Font...") { FontPickerController.shared.show() }.controlSize(.small)
+                    if !customFontName.isEmpty { Text(customFontName).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }
+                }
+            }
+
+            Section("Behavior") {
+                Toggle("Keep width stable", isOn: $stabilizeMenuBarWidth).toggleStyle(.switch)
+                Toggle("Fade speed changes", isOn: $smoothMenuBarTransitions).toggleStyle(.switch)
+                Text("Fade transitions are automatically disabled when Reduce Motion is enabled in macOS.").font(.caption).foregroundStyle(.secondary)
+            }
+        }.settingsForm()
     }
 }
 
@@ -122,12 +178,12 @@ struct AppearanceSettingsPane: View {
     @AppStorage(AppDefaults.surfaceStyle) private var surfaceStyle = SurfaceStyle.system.rawValue
     var body: some View {
         Form {
-            Section("Theme") { Picker("Appearance", selection: $theme) { ForEach(AppTheme.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented) }
-            Section("Surface") {
-                Picker("Material", selection: $surfaceStyle) { ForEach(SurfaceStyle.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+            Section("Window Appearance") {
+                Picker("Theme", selection: $theme) { ForEach(AppTheme.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Picker("Surface", selection: $surfaceStyle) { ForEach(SurfaceStyle.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 Text("System follows macOS Reduce Transparency. Transparent uses Liquid Glass where available; Opaque prefers contrast and legibility.").font(.caption).foregroundStyle(.secondary)
             }
-            Section("Accent") { Picker("Chart Accent", selection: $accent) { Text("Blue").tag("blue"); Text("Pink").tag("pink"); Text("Green").tag("green"); Text("Orange").tag("orange") }.pickerStyle(.segmented) }
+            Section("Charts") { Picker("Accent", selection: $accent) { Text("Blue").tag("blue"); Text("Pink").tag("pink"); Text("Green").tag("green"); Text("Orange").tag("orange") }.pickerStyle(.segmented) }
         }.settingsForm()
     }
 }
@@ -139,16 +195,18 @@ struct NetworkSettingsPane: View {
     @AppStorage(AppDefaults.sampleInterval) private var sampleInterval = 1.0
     var body: some View {
         Form {
-            Section("Connection") {
+            Section("Current Connection") {
                 LabeledContent("Status", value: connection.status)
                 LabeledContent("Interface", value: connection.interface)
                 LabeledContent("Local IP", value: connection.localIPAddress)
                 LabeledContent("Public IP", value: connection.publicIPAddress)
                 Button("Refresh Public IP") { connection.refreshPublicIPIfNeeded() }.controlSize(.small)
             }
-            Section("Monitoring") {
+            Section("Displayed Data") {
                 Toggle("Show interface names", isOn: $showInterfaceName).toggleStyle(.switch)
                 Toggle("Fetch public IP address", isOn: $showPublicIP).toggleStyle(.switch).onChange(of: showPublicIP) { _, _ in connection.refreshPublicIPIfNeeded() }
+            }
+            Section("Sampling") {
                 LabeledContent("Sample interval") { Slider(value: $sampleInterval, in: 0.5...5, step: 0.5).frame(width: 180); Text("\(sampleInterval, specifier: "%.1f")s").monospacedDigit() }
                 Button("Restart Monitor") { NetworkMonitor.shared.start(interval: sampleInterval) }.controlSize(.small)
             }
@@ -162,11 +220,13 @@ struct AlertsSettingsPane: View {
     @AppStorage(AppDefaults.uploadAlertMBps) private var upload = 10.0
     var body: some View {
         Form {
-            Section("Spike Alerts") {
+            Section("Notifications") {
                 Toggle("Notify on traffic spikes", isOn: $enabled).toggleStyle(.switch)
+                Button("Request Notification Permission") { AlertManager.shared.requestAuthorization() }.controlSize(.small)
+            }
+            Section("Thresholds") {
                 LabeledContent("Download threshold") { Slider(value: $download, in: 1...500, step: 1).frame(width: 180); Text("\(Int(download)) MB/s").monospacedDigit() }
                 LabeledContent("Upload threshold") { Slider(value: $upload, in: 1...500, step: 1).frame(width: 180); Text("\(Int(upload)) MB/s").monospacedDigit() }
-                Button("Request Notification Permission") { AlertManager.shared.requestAuthorization() }.controlSize(.small)
             }
         }.settingsForm()
     }
@@ -178,7 +238,7 @@ struct HistorySettingsPane: View {
     @State private var exportMessage: String?
     var body: some View {
         Form {
-            Section("Retention") { Stepper("Keep \(retention) days", value: $retention, in: 1...365) }
+            Section("Storage") { Stepper("Keep \(retention) days", value: $retention, in: 1...365) }
             Section("Usage") {
                 ForEach(historyRows) { row in
                     LabeledContent(row.date, value: row.value)
@@ -234,7 +294,6 @@ struct UpdatesSettingsPane: View {
 }
 
 struct AboutSettingsPane: View {
-    @AppStorage(AppDefaults.onboardingCompleted) private var onboardingCompleted = false
     var body: some View {
         Form {
             Section {
@@ -246,7 +305,6 @@ struct AboutSettingsPane: View {
             Section("Project") {
                 Link("GitHub", destination: URL(string: "https://github.com/anxkhn/netspeed")!)
                 Link("GPLv3 License", destination: URL(string: "https://www.gnu.org/licenses/gpl-3.0.html")!)
-                Button("Show Onboarding Again") { onboardingCompleted = false; OnboardingWindowController.show() }.controlSize(.small)
             }
         }.settingsForm()
     }
