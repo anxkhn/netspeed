@@ -1,0 +1,67 @@
+import Charts
+import SwiftUI
+
+struct VisualizerView: View {
+    @State private var monitor = NetworkMonitor.shared
+    @State private var connection = ConnectionMonitor.shared
+    @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.bytes.rawValue
+    @State private var showUpload = true
+    @State private var showDownload = true
+
+    private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .bytes }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Live Traffic").font(.largeTitle.bold())
+                    Text("\(connection.status) · \(connection.localIPAddress) · \(monitor.current.interfaceName)").foregroundStyle(.secondary)
+                }
+                Spacer()
+                Toggle("Download", isOn: $showDownload).toggleStyle(.checkbox)
+                Toggle("Upload", isOn: $showUpload).toggleStyle(.checkbox)
+            }
+
+            Chart(monitor.samples) { sample in
+                if showDownload {
+                    AreaMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
+                        .foregroundStyle(.blue.opacity(0.16))
+                    LineMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
+                        .foregroundStyle(.blue)
+                        .lineStyle(StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                }
+                if showUpload {
+                    LineMark(x: .value("Time", sample.timestamp), y: .value("Upload", scaled(sample.uploadBytesPerSecond)))
+                        .foregroundStyle(.pink)
+                        .lineStyle(StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+                }
+            }
+            .chartYAxis { AxisMarks { value in AxisGridLine(); AxisValueLabel { if let v = value.as(Double.self) { Text(label(v)) } } } }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            HStack(spacing: 24) {
+                StatBlock(title: "Download now", value: SpeedFormatter.speed(monitor.current.downloadBytesPerSecond, unit: unit))
+                StatBlock(title: "Upload now", value: SpeedFormatter.speed(monitor.current.uploadBytesPerSecond, unit: unit))
+                StatBlock(title: "Session total", value: "↓ \(SpeedFormatter.bytes(monitor.sessionTotals.downloaded))  ↑ \(SpeedFormatter.bytes(monitor.sessionTotals.uploaded))")
+                Spacer()
+                Button("Reset Session") { monitor.resetSession() }
+            }
+        }
+        .padding(24)
+        .background(.regularMaterial)
+    }
+
+    private func scaled(_ bytes: UInt64) -> Double { Double(bytes) * (unit == .bits ? 8 : 1) }
+    private func label(_ value: Double) -> String { SpeedFormatter.speed(UInt64(value / (unit == .bits ? 8 : 1)), unit: unit) }
+}
+
+private struct StatBlock: View {
+    let title: String
+    let value: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title).font(.caption).foregroundStyle(.secondary)
+            Text(value).font(.headline).monospacedDigit()
+        }
+    }
+}
