@@ -12,7 +12,7 @@ final class NetworkMonitor {
 
     private var previous: (uploaded: UInt64, downloaded: UInt64)?
     private var timer: Timer?
-    private let maxSamples = 600
+    private let maxSamples = 21_600
 
     private init() {}
 
@@ -65,6 +65,19 @@ final class NetworkMonitor {
         if samples.count > maxSamples { samples.removeFirst(samples.count - maxSamples) }
         UsageHistoryStore.shared.record(sample)
         AlertManager.shared.evaluate(sample)
+    }
+
+    func totals(since date: Date) -> NetworkTotals {
+        samples.filter { $0.timestamp >= date }.reduce(NetworkTotals()) { totals, sample in
+            NetworkTotals(uploaded: totals.uploaded + sample.uploadBytesPerSecond, downloaded: totals.downloaded + sample.downloadBytesPerSecond)
+        }
+    }
+
+    var todayTotals: NetworkTotals {
+        let startOfDay = Calendar.current.startOfDay(for: .now)
+        let recent = totals(since: startOfDay)
+        let persisted = UsageHistoryStore.shared.dailyTotals[startOfDay, default: NetworkTotals()]
+        return NetworkTotals(uploaded: max(recent.uploaded, persisted.uploaded), downloaded: max(recent.downloaded, persisted.downloaded))
     }
 
     private func delta(current: UInt64, previous: UInt64) -> UInt64 {

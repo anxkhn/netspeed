@@ -1,67 +1,44 @@
-import Charts
 import SwiftUI
 
 struct DashboardPopoverView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var monitor = NetworkMonitor.shared
-    @State private var connection = ConnectionMonitor.shared
     @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.autoBytes.rawValue
     @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
 
-    private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .bytes }
+    private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .autoBytes }
+    private var lastHour: NetworkTotals { monitor.totals(since: Date().addingTimeInterval(-3_600)) }
+    private var lastSixHours: NetworkTotals { monitor.totals(since: Date().addingTimeInterval(-21_600)) }
+    private var today: NetworkTotals { monitor.todayTotals }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 13) {
-            header
-            HStack(spacing: 10) {
-                SpeedCard(title: "Download", value: speed(monitor.current.downloadBytesPerSecond), color: .blue)
-                SpeedCard(title: "Upload", value: speed(monitor.current.uploadBytesPerSecond), color: .pink)
+        VStack(alignment: .leading, spacing: 12) {
+            LiveSpeedBlock(
+                download: speed(monitor.current.downloadBytesPerSecond),
+                upload: speed(monitor.current.uploadBytesPerSecond)
+            )
+
+            Divider().opacity(0.45)
+
+            VStack(spacing: 7) {
+                UsageLine(title: "Last hour", totals: lastHour)
+                UsageLine(title: "Last 6 hours", totals: lastSixHours)
+                UsageLine(title: "Today", totals: today)
             }
-            MiniChart(samples: monitor.samples, unit: unit, showsUnitLabels: showUnitLabels)
-                .frame(height: 124)
-            infoRows
+
             Divider().opacity(0.45)
             actionRows
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .frame(width: 348)
+        .frame(width: 318)
         .background(.regularMaterial)
         .preferredColorScheme(AppTheme(rawValue: UserDefaults.standard.string(forKey: AppDefaults.appTheme) ?? "")?.colorScheme)
-        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: monitor.current.downloadBytesPerSecond)
-    }
-
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("NetSpeed")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                Text("\(connection.status) · \(connection.localIPAddress)")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
-            Spacer()
-            Image(systemName: "globe")
-                .font(.system(size: 26, weight: .semibold))
-                .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(.secondary)
-        }
-    }
-
-    private var infoRows: some View {
-        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 8) {
-            DashboardRow(title: "Session", value: "↓ \(SpeedFormatter.bytes(monitor.sessionTotals.downloaded))  ↑ \(SpeedFormatter.bytes(monitor.sessionTotals.uploaded))")
-            DashboardRow(title: "Interface", value: monitor.current.interfaceName)
-            DashboardRow(title: "Public IP", value: connection.publicIPAddress)
-        }
-        .font(.system(size: 12, weight: .semibold, design: .rounded))
+        .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: monitor.current.downloadBytesPerSecond)
     }
 
     private var actionRows: some View {
         VStack(spacing: 4) {
-            MenuActionRow(title: "Refresh", symbol: "arrow.clockwise") { ConnectionMonitor.shared.refreshPublicIPIfNeeded() }
-            Divider().opacity(0.35)
             MenuActionRow(title: "Open Visualizer", symbol: "chart.xyaxis.line") { VisualizerWindowController.show() }
             MenuActionRow(title: "Settings...", symbol: "gearshape", trailing: "⌘,") { SettingsWindowController.show(tab: .general) }
             Divider().opacity(0.35)
@@ -74,30 +51,59 @@ struct DashboardPopoverView: View {
     }
 }
 
-private struct DashboardRow: View {
-    let title: String
-    let value: String
+private struct LiveSpeedBlock: View {
+    let download: String
+    let upload: String
+
     var body: some View {
-        GridRow {
-            Text(title).foregroundStyle(.secondary).frame(width: 66, alignment: .leading)
-            Text(value).lineLimit(1).truncationMode(.middle)
+        VStack(spacing: 8) {
+            LiveSpeedRow(symbol: "arrow.down", title: "Download", value: download, color: .blue)
+            LiveSpeedRow(symbol: "arrow.up", title: "Upload", value: upload, color: .pink)
         }
     }
 }
 
-private struct SpeedCard: View {
+private struct LiveSpeedRow: View {
+    let symbol: String
     let title: String
     let value: String
     let color: Color
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 12, weight: .semibold, design: .rounded)).foregroundStyle(.secondary)
-            Text(value).font(.system(size: 20, weight: .bold, design: .rounded)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
+        HStack(spacing: 10) {
+            Image(systemName: symbol)
+                .foregroundStyle(color)
+                .font(.system(size: 13, weight: .bold))
+                .frame(width: 18)
+            Text(title)
+                .foregroundStyle(.secondary)
+                .frame(width: 72, alignment: .leading)
+            Spacer(minLength: 12)
+            Text(value)
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.72)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 12)
-        .background(color.opacity(0.15), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+    }
+}
+
+private struct UsageLine: View {
+    let title: String
+    let totals: NetworkTotals
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .foregroundStyle(.secondary)
+                .frame(width: 78, alignment: .leading)
+            Spacer(minLength: 8)
+            Text("↓ \(SpeedFormatter.bytes(totals.downloaded))")
+                .monospacedDigit()
+            Text("↑ \(SpeedFormatter.bytes(totals.uploaded))")
+                .monospacedDigit()
+        }
+        .font(.caption)
     }
 }
 
@@ -120,51 +126,5 @@ private struct MenuActionRow: View {
             .padding(.vertical, 5)
         }
         .buttonStyle(.plain)
-    }
-}
-
-struct MiniChart: View {
-    let samples: [NetworkSample]
-    let unit: SpeedUnit
-    let showsUnitLabels: Bool
-
-    var body: some View {
-        Chart(samples.suffix(90)) { sample in
-            AreaMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
-                .foregroundStyle(.blue.opacity(0.12))
-                .interpolationMethod(.catmullRom)
-            LineMark(x: .value("Time", sample.timestamp), y: .value("Download", scaled(sample.downloadBytesPerSecond)))
-                .foregroundStyle(.blue)
-                .lineStyle(StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
-                .interpolationMethod(.catmullRom)
-            LineMark(x: .value("Time", sample.timestamp), y: .value("Upload", scaled(sample.uploadBytesPerSecond)))
-                .foregroundStyle(.pink.opacity(0.9))
-                .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
-                .interpolationMethod(.catmullRom)
-        }
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .minute)) { value in
-                AxisGridLine(stroke: StrokeStyle(lineWidth: 0.6, dash: [4, 5])).foregroundStyle(.secondary.opacity(0.28))
-                AxisValueLabel(anchor: .top) {
-                    if let date = value.as(Date.self) {
-                        Text(date, format: .dateTime.hour().minute())
-                            .font(.caption2.monospacedDigit())
-                    }
-                }
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .trailing) { value in
-                AxisGridLine().foregroundStyle(.secondary.opacity(0.28))
-                AxisValueLabel {
-                    if let v = value.as(Double.self) { Text(label(v)).font(.caption2.monospacedDigit()) }
-                }
-            }
-        }
-    }
-
-    private func scaled(_ bytes: UInt64) -> Double { Double(bytes) * (unit.isBitBased ? 8 : 1) }
-    private func label(_ value: Double) -> String {
-        SpeedFormatter.speedValue(UInt64(value / (unit.isBitBased ? 8 : 1)), unit: unit, showsUnit: showsUnitLabels)
     }
 }
