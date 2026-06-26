@@ -53,12 +53,14 @@ enum MenuBarLayout: String, CaseIterable, Identifiable {
 }
 
 enum MenuBarArrowPosition: String, CaseIterable, Identifiable {
+    case hidden
     case left
     case right
 
     var id: Self { self }
     var title: String {
         switch self {
+        case .hidden: "Hidden"
         case .left: "Left"
         case .right: "Right"
         }
@@ -121,6 +123,8 @@ enum AppDefaults {
     static let menuBarFontMode = "menuBarFontMode"
     static let menuBarFontName = "menuBarFontName"
     static let menuBarFontSize = "menuBarFontSize"
+    static let menuBarFontWidth = "menuBarFontWidth"
+    static let menuBarFontWeight = "menuBarFontWeight"
     static let stabilizeMenuBarWidth = "stabilizeMenuBarWidth"
     static let smoothMenuBarTransitions = "smoothMenuBarTransitions"
     static let surfaceStyle = "surfaceStyle"
@@ -146,6 +150,8 @@ extension UserDefaults {
             AppDefaults.menuBarFontMode: MenuBarFontMode.condensed.rawValue,
             AppDefaults.menuBarFontName: "",
             AppDefaults.menuBarFontSize: 10.0,
+            AppDefaults.menuBarFontWidth: 0.82,
+            AppDefaults.menuBarFontWeight: 0.0,
             AppDefaults.stabilizeMenuBarWidth: true,
             AppDefaults.smoothMenuBarTransitions: true,
             AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,

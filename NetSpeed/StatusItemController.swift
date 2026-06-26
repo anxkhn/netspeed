@@ -101,7 +101,11 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     private func compose(speed: String, arrow: String, position: MenuBarArrowPosition) -> String {
-        position == .left ? "\(arrow) \(speed)" : "\(speed) \(arrow)"
+        switch position {
+        case .hidden: speed
+        case .left: "\(arrow) \(speed)"
+        case .right: "\(speed) \(arrow)"
+        }
     }
 
     private func updateReservedWidth(layout: MenuBarLayout, unit: SpeedUnit, showsUnit: Bool, arrowPosition: MenuBarArrowPosition, font: NSFont) {

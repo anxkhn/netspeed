@@ -1,4 +1,5 @@
 import AppKit
+import Charts
 import SwiftUI
 
 struct GeneralSettingsPane: View {
@@ -18,8 +19,15 @@ struct GeneralSettingsPane: View {
                 if let launchError { Text(launchError).font(.caption).foregroundStyle(.red) }
             }
             Section("Setup") {
-                Button("Show Onboarding Again") { onboardingCompleted = false; OnboardingWindowController.show() }.controlSize(.small)
-                Text("Onboarding walks through notifications, launch at login, public IP display, and the main app windows.").font(.caption).foregroundStyle(.secondary)
+                LabeledContent {
+                    Button("Open Onboarding") { onboardingCompleted = false; OnboardingWindowController.show() }
+                        .controlSize(.small)
+                } label: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Onboarding")
+                        Text("Review startup, notifications, public IP display, and app window basics.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }
         }.settingsForm()
     }
@@ -37,6 +45,8 @@ struct MenuBarSettingsPane: View {
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
     @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
     @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
+    @AppStorage(AppDefaults.menuBarFontWidth) private var fontWidth = 0.82
+    @AppStorage(AppDefaults.menuBarFontWeight) private var fontWeight = 0.0
     @AppStorage(AppDefaults.stabilizeMenuBarWidth) private var stabilizeMenuBarWidth = true
     @AppStorage(AppDefaults.smoothMenuBarTransitions) private var smoothMenuBarTransitions = true
     @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.autoBytes.rawValue
@@ -53,10 +63,10 @@ struct MenuBarSettingsPane: View {
                 }
                 .pickerStyle(.segmented)
 
-                Picker("Arrow position", selection: $arrowPosition) {
+                Picker("Arrow", selection: $arrowPosition) {
                     ForEach(MenuBarArrowPosition.allCases) { Text($0.title).tag($0.rawValue) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
 
                 Picker("Units", selection: $unit) {
                     Section("Automatic") {
@@ -92,13 +102,22 @@ struct MenuBarSettingsPane: View {
                     Text("\(fontSize, specifier: "%.1f") pt").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing)
                 }
 
-                if MenuBarFontMode(rawValue: fontMode) == .condensed {
-                    Text("Uses Avenir Next Condensed, a built-in macOS font with taller, narrower glyphs.").font(.caption).foregroundStyle(.secondary)
+                LabeledContent("Width") {
+                    Slider(value: $fontWidth, in: 0.55...1.0, step: 0.01).frame(width: 180)
+                    Text("\(Int(fontWidth * 100))%").monospacedDigit().foregroundStyle(.secondary).frame(width: 58, alignment: .trailing)
                 }
 
-                HStack(spacing: 8) {
-                    Button("Choose Custom Font...") { FontPickerController.shared.show() }.controlSize(.small)
-                    if !customFontName.isEmpty { Text(customFontName).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }
+                Toggle("Bold", isOn: Binding(get: { fontWeight >= 0.5 }, set: { fontWeight = $0 ? 1.0 : 0.0 })).toggleStyle(.switch)
+
+                if MenuBarFontMode(rawValue: fontMode) == .condensed {
+                    Text("Condensed uses a built-in macOS typeface. Width can compress it further for tighter menu bar layouts.").font(.caption).foregroundStyle(.secondary)
+                }
+
+                LabeledContent("Custom font") {
+                    HStack(spacing: 8) {
+                        if !customFontName.isEmpty { Text(customFontName).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }
+                        Button("Choose...") { FontPickerController.shared.show() }.controlSize(.small)
+                    }
                 }
             }
 
@@ -119,6 +138,8 @@ private struct MenuBarFontPreview: View {
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
     @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
     @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
+    @AppStorage(AppDefaults.menuBarFontWidth) private var fontWidth = 0.82
+    @AppStorage(AppDefaults.menuBarFontWeight) private var fontWeight = 0.0
 
     private var unit: SpeedUnit { SpeedUnit(rawValue: unitRaw) ?? .bytes }
     private var up: String { SpeedFormatter.speedValue(815 * 1024, unit: unit, showsUnit: showUnitLabels) }
@@ -136,7 +157,7 @@ private struct MenuBarFontPreview: View {
                     .background(.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             }
         }
-        .id("\(layout)-\(arrowPosition)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)")
+        .id("\(layout)-\(arrowPosition)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)-\(fontWidth)-\(fontWeight)")
     }
 
     @ViewBuilder
@@ -168,7 +189,11 @@ private struct MenuBarFontPreview: View {
     }
 
     private func compose(speed: String, arrow: String) -> String {
-        (MenuBarArrowPosition(rawValue: arrowPosition) ?? .left) == .left ? "\(arrow) \(speed)" : "\(speed) \(arrow)"
+        switch MenuBarArrowPosition(rawValue: arrowPosition) ?? .left {
+        case .hidden: speed
+        case .left: "\(arrow) \(speed)"
+        case .right: "\(speed) \(arrow)"
+        }
     }
 }
 
@@ -181,7 +206,7 @@ struct AppearanceSettingsPane: View {
             Section("Window Appearance") {
                 Picker("Theme", selection: $theme) { ForEach(AppTheme.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 Picker("Surface", selection: $surfaceStyle) { ForEach(SurfaceStyle.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Text("System follows macOS Reduce Transparency. Transparent uses Liquid Glass where available; Opaque prefers contrast and legibility.").font(.caption).foregroundStyle(.secondary)
+                Text("System respects macOS accessibility settings. Opaque improves contrast when transparency is distracting.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Charts") { Picker("Accent", selection: $accent) { Text("Blue").tag("blue"); Text("Pink").tag("pink"); Text("Green").tag("green"); Text("Orange").tag("orange") }.pickerStyle(.segmented) }
         }.settingsForm()
@@ -238,15 +263,30 @@ struct HistorySettingsPane: View {
     @State private var exportMessage: String?
     var body: some View {
         Form {
+            Section("Overview") {
+                UsageSummaryView(rows: usageRows)
+            }
+            Section("Trend") {
+                UsageHistoryChart(rows: usageRows)
+                    .frame(height: 180)
+            }
             Section("Storage") { Stepper("Keep \(retention) days", value: $retention, in: 1...365) }
             Section("Usage") {
-                ForEach(historyRows) { row in
+                ForEach(usageRows) { row in
                     LabeledContent(row.date, value: row.value)
                 }
                 if store.dailyTotals.isEmpty { Text("No history yet.").foregroundStyle(.secondary) }
             }
             Section("Export") {
-                HStack { Button("Export CSV") { export(kind: "csv") }; Button("Export JSON") { export(kind: "json") }; Button("Clear History", role: .destructive) { store.clear() } }
+                LabeledContent("Data") {
+                    HStack(spacing: 8) {
+                        Button("Export CSV") { export(kind: "csv") }.controlSize(.small)
+                        Button("Export JSON") { export(kind: "json") }.controlSize(.small)
+                    }
+                }
+                LabeledContent("Reset") {
+                    Button("Clear History", role: .destructive) { store.clear() }.controlSize(.small)
+                }
                 if let exportMessage { Text(exportMessage).font(.caption).foregroundStyle(.secondary) }
             }
         }.settingsForm()
@@ -259,21 +299,67 @@ struct HistorySettingsPane: View {
         } catch { exportMessage = error.localizedDescription }
     }
 
-    private var historyRows: [HistoryRow] {
+    private var usageRows: [UsageRow] {
         store.dailyTotals.keys.sorted().map { day in
             let totals = store.dailyTotals[day, default: NetworkTotals()]
-            return HistoryRow(
+            return UsageRow(
                 date: day.formatted(date: .abbreviated, time: .omitted),
+                rawDate: day,
+                uploaded: totals.uploaded,
+                downloaded: totals.downloaded,
                 value: "↓ \(SpeedFormatter.bytes(totals.downloaded))  ↑ \(SpeedFormatter.bytes(totals.uploaded))"
             )
         }
     }
 }
 
-private struct HistoryRow: Identifiable {
+private struct UsageRow: Identifiable {
     let id = UUID()
     let date: String
+    let rawDate: Date
+    let uploaded: UInt64
+    let downloaded: UInt64
     let value: String
+    var total: UInt64 { uploaded + downloaded }
+}
+
+private struct UsageSummaryView: View {
+    let rows: [UsageRow]
+    private var totalDownloaded: UInt64 { rows.reduce(0) { $0 + $1.downloaded } }
+    private var totalUploaded: UInt64 { rows.reduce(0) { $0 + $1.uploaded } }
+    private var total: UInt64 { totalDownloaded + totalUploaded }
+    private var downloadFraction: Double { total == 0 ? 0 : Double(totalDownloaded) / Double(total) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                LabeledContent("Downloaded", value: SpeedFormatter.bytes(totalDownloaded))
+                LabeledContent("Uploaded", value: SpeedFormatter.bytes(totalUploaded))
+            }
+            ProgressView(value: downloadFraction)
+            Text(total == 0 ? "No recorded traffic yet." : "Download is \(Int(downloadFraction * 100))% of recorded usage.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct UsageHistoryChart: View {
+    let rows: [UsageRow]
+
+    var body: some View {
+        if rows.isEmpty {
+            ContentUnavailableView("No History", systemImage: "chart.bar.xaxis", description: Text("Usage totals appear here after NetSpeed records traffic."))
+        } else {
+            Chart(rows) { row in
+                BarMark(x: .value("Day", row.rawDate), y: .value("Downloaded", row.downloaded))
+                    .foregroundStyle(.blue.opacity(0.78))
+                BarMark(x: .value("Day", row.rawDate), y: .value("Uploaded", row.uploaded))
+                    .foregroundStyle(.pink.opacity(0.72))
+            }
+            .chartYAxis { AxisMarks { value in AxisGridLine(); AxisValueLabel { if let bytes = value.as(UInt64.self) { Text(SpeedFormatter.bytes(bytes)) } } } }
+        }
+    }
 }
 
 struct UpdatesSettingsPane: View {
@@ -299,7 +385,7 @@ struct AboutSettingsPane: View {
             Section {
                 HStack(spacing: 16) {
                     Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 72, height: 72)
-                    VStack(alignment: .leading, spacing: 5) { Text("NetSpeed").font(.largeTitle.bold()); Text("A professional liquid-glass network monitor for macOS.").foregroundStyle(.secondary); Text("Copyright (C) 2026 anxkhn").font(.caption).foregroundStyle(.tertiary) }
+                    VStack(alignment: .leading, spacing: 5) { Text("NetSpeed").font(.largeTitle.bold()); Text("A menu bar network monitor for macOS.").foregroundStyle(.secondary); Text("Copyright (C) 2026 anxkhn").font(.caption).foregroundStyle(.tertiary) }
                 }
             }
             Section("Project") {
