@@ -3,12 +3,13 @@ import SwiftUI
 
 struct GeneralSettingsPane: View {
     @AppStorage(AppDefaults.menuBarLayout) private var menuBarLayout = MenuBarLayout.stacked.rawValue
-    @AppStorage(AppDefaults.menuBarIconPosition) private var iconPosition = MenuBarIconPosition.hidden.rawValue
+    @AppStorage(AppDefaults.menuBarArrowPosition) private var arrowPosition = MenuBarArrowPosition.left.rawValue
     @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
     @AppStorage(AppDefaults.menuBarFontName) private var customFontName = ""
     @AppStorage(AppDefaults.menuBarFontSize) private var fontSize = 9.0
     @AppStorage(AppDefaults.stabilizeMenuBarWidth) private var stabilizeMenuBarWidth = true
+    @AppStorage(AppDefaults.smoothMenuBarTransitions) private var smoothMenuBarTransitions = true
     @AppStorage(AppDefaults.unit) private var unit = SpeedUnit.autoBytes.rawValue
     @State private var launchAtLogin = LaunchAtLoginManager.isEnabled
     @State private var launchError: String?
@@ -17,10 +18,12 @@ struct GeneralSettingsPane: View {
         Form {
             Section("Menu Bar") {
                 Picker("Layout", selection: $menuBarLayout) { ForEach(MenuBarLayout.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Picker("Icon position", selection: $iconPosition) { ForEach(MenuBarIconPosition.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
+                Picker("Arrow position", selection: $arrowPosition) { ForEach(MenuBarArrowPosition.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
                 Picker("Units", selection: $unit) { ForEach(SpeedUnit.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.menu)
                 Toggle("Show unit labels", isOn: $showUnitLabels).toggleStyle(.switch)
                 Toggle("Keep menu bar width stable", isOn: $stabilizeMenuBarWidth).toggleStyle(.switch)
+                Toggle("Smooth speed changes", isOn: $smoothMenuBarTransitions).toggleStyle(.switch)
+                Text("Smooth changes fade the menu bar text between speed updates. This is automatically disabled when Reduce Motion is enabled in macOS.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Menu Bar Font") {
                 Picker("Font", selection: $fontMode) { ForEach(MenuBarFontMode.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
@@ -54,6 +57,7 @@ struct GeneralSettingsPane: View {
 
 private struct MenuBarFontPreview: View {
     @AppStorage(AppDefaults.menuBarLayout) private var layout = MenuBarLayout.stacked.rawValue
+    @AppStorage(AppDefaults.menuBarArrowPosition) private var arrowPosition = MenuBarArrowPosition.left.rawValue
     @AppStorage(AppDefaults.unit) private var unitRaw = SpeedUnit.autoBytes.rawValue
     @AppStorage(AppDefaults.showUnitLabels) private var showUnitLabels = true
     @AppStorage(AppDefaults.menuBarFontMode) private var fontMode = MenuBarFontMode.condensed.rawValue
@@ -76,7 +80,7 @@ private struct MenuBarFontPreview: View {
                     .background(.black.opacity(0.78), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
             }
         }
-        .id("\(layout)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)")
+        .id("\(layout)-\(arrowPosition)-\(unitRaw)-\(showUnitLabels)-\(fontMode)-\(customFontName)-\(fontSize)")
     }
 
     @ViewBuilder
@@ -85,26 +89,30 @@ private struct MenuBarFontPreview: View {
         switch mode {
         case .stacked:
             VStack(alignment: .trailing, spacing: -3) {
-                Text("↑ \(up)")
-                Text("↓ \(down)")
+                Text(compose(speed: up, arrow: "↑"))
+                Text(compose(speed: down, arrow: "↓"))
             }
             .font(MenuBarFont.swiftUIFont(size: fontSize))
             .foregroundStyle(.white)
             .monospacedDigit()
             .lineLimit(1)
         case .compact:
-            Text("↓ \(down)  ↑ \(up)")
+            Text("\(compose(speed: down, arrow: "↓"))  \(compose(speed: up, arrow: "↑"))")
                 .font(MenuBarFont.swiftUIFont(size: max(10, fontSize)))
                 .foregroundStyle(.white)
                 .monospacedDigit()
                 .lineLimit(1)
         case .downloadOnly:
-            Text("↓ \(down)")
+            Text(compose(speed: down, arrow: "↓"))
                 .font(MenuBarFont.swiftUIFont(size: max(10, fontSize)))
                 .foregroundStyle(.white)
                 .monospacedDigit()
                 .lineLimit(1)
         }
+    }
+
+    private func compose(speed: String, arrow: String) -> String {
+        (MenuBarArrowPosition(rawValue: arrowPosition) ?? .left) == .left ? "\(arrow) \(speed)" : "\(speed) \(arrow)"
     }
 }
 

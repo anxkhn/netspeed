@@ -52,15 +52,13 @@ enum MenuBarLayout: String, CaseIterable, Identifiable {
     }
 }
 
-enum MenuBarIconPosition: String, CaseIterable, Identifiable {
-    case hidden
+enum MenuBarArrowPosition: String, CaseIterable, Identifiable {
     case left
     case right
 
     var id: Self { self }
     var title: String {
         switch self {
-        case .hidden: "Hidden"
         case .left: "Left"
         case .right: "Right"
         }
@@ -118,13 +116,14 @@ enum AppTheme: String, CaseIterable, Identifiable {
 enum AppDefaults {
     static let unit = "unit"
     static let menuBarLayout = "menuBarLayout"
-    static let menuBarIconPosition = "menuBarIconPosition"
+    static let menuBarArrowPosition = "menuBarArrowPosition"
     static let showUnitLabels = "showUnitLabels"
     static let menuBarFontMode = "menuBarFontMode"
     static let menuBarFontName = "menuBarFontName"
     static let menuBarFontSize = "menuBarFontSize"
     static let menuBarCondensedWidth = "menuBarCondensedWidth"
     static let stabilizeMenuBarWidth = "stabilizeMenuBarWidth"
+    static let smoothMenuBarTransitions = "smoothMenuBarTransitions"
     static let surfaceStyle = "surfaceStyle"
     static let onboardingCompleted = "onboardingCompleted"
     static let showInterfaceName = "showInterfaceName"
@@ -143,13 +142,14 @@ extension UserDefaults {
         standard.register(defaults: [
             AppDefaults.unit: SpeedUnit.autoBytes.rawValue,
             AppDefaults.menuBarLayout: MenuBarLayout.stacked.rawValue,
-            AppDefaults.menuBarIconPosition: MenuBarIconPosition.hidden.rawValue,
+            AppDefaults.menuBarArrowPosition: MenuBarArrowPosition.left.rawValue,
             AppDefaults.showUnitLabels: true,
             AppDefaults.menuBarFontMode: MenuBarFontMode.condensed.rawValue,
             AppDefaults.menuBarFontName: "",
             AppDefaults.menuBarFontSize: 10.0,
             AppDefaults.menuBarCondensedWidth: 0.74,
             AppDefaults.stabilizeMenuBarWidth: true,
+            AppDefaults.smoothMenuBarTransitions: true,
             AppDefaults.surfaceStyle: SurfaceStyle.system.rawValue,
             AppDefaults.onboardingCompleted: false,
             AppDefaults.showInterfaceName: true,
