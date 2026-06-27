@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">NetSpeed app icon</title>
+  <desc id="desc">A black rounded-square macOS icon with a white network speed gauge.</desc>
+  <defs>
+    <linearGradient id="surface" x1="128" y1="32" x2="896" y2="992" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#050505"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <filter id="softShadow" x="-12%" y="-12%" width="124%" height="124%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+  <rect x="0" y="0" width="1024" height="1024" rx="176" fill="url(#surface)"/>
+  <g filter="url(#softShadow)" fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M260 405C326 330 414 291 512 291s186 39 252 114" stroke-width="66"/>
+    <path d="M348 512c43-48 99-73 164-73s121 25 164 73" stroke-width="66"/>
+    <path d="M529 652 626 555" stroke-width="48"/>
+    <circle cx="512" cy="676" r="58" stroke-width="58"/>
+    <path d="M292 695V591" stroke-width="48"/>
+    <path d="M249 634 292 591 335 634" stroke-width="48"/>
+    <path d="M732 591V695" stroke-width="48"/>
+    <path d="M689 652 732 695 775 652" stroke-width="48"/>
+  </g>
+</svg>

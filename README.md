@@ -1,21 +1,38 @@
-# NetSpeed
+<p align="center">
+  <img src="Resources/netspeed-app-icon.svg" alt="NetSpeed app icon" width="140" height="140">
+</p>
 
-NetSpeed is a native macOS menu bar network monitor rebuilt for macOS 26 with liquid-glass windows, SwiftUI Charts, Sparkle updates, history tracking, exports, alerts, and a professional settings experience.
+<h1 align="center">NetSpeed</h1>
 
-## Features
+<p align="center">
+  A polished macOS menu bar monitor for live network speed, usage history, and connection details.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-GPLv3--or--later-111111"></a>
+  <img alt="macOS" src="https://img.shields.io/badge/macOS-14%2B-111111">
+  <img alt="Swift" src="https://img.shields.io/badge/Swift-6-111111">
+</p>
+
+## Overview
+
+NetSpeed puts live upload and download activity where it is easiest to glance at: the macOS menu bar. Open the popover for a clean snapshot of current throughput, recent usage, and interface details, or switch to the visualizer for a larger chart-driven view.
+
+It is built with SwiftUI, Swift Charts, a native settings experience, usage exports, alerting, launch-at-login support, sandboxing, hardened runtime settings, and Sparkle wiring for direct distribution.
+
+## Highlights
 
 - Live upload and download speeds in the menu bar.
-- Rich liquid-glass popover dashboard.
-- Full-size visualizer window with Swift Charts.
-- Daily usage history with retention controls.
-- CSV and JSON export.
-- Local IP, interface, and optional public IP display.
+- Compact popover with speed cards, recent usage totals, and network details.
+- Full visualizer window powered by Swift Charts.
+- Daily usage history with configurable retention.
+- CSV and JSON exports for recorded usage data.
+- Local IP, active interface, and optional public IP display.
 - Spike notifications with custom thresholds.
 - Launch at login via `SMAppService`.
-- Custom menu bar layouts and bytes/bits units.
-- Native macOS 26 liquid-glass Settings window with sidebar navigation.
-- Sparkle 2 auto-update integration for non-App Store distribution.
-- Sandboxed, hardened runtime-friendly build settings.
+- Custom menu bar layout, arrow placement, typography, stable width, and bytes/bits units.
+- Native macOS 26 liquid-glass settings with sidebar navigation.
+- Sparkle 2 integration for non-App Store updates.
 
 ## Requirements
 
@@ -24,16 +41,19 @@ NetSpeed is a native macOS menu bar network monitor rebuilt for macOS 26 with li
 
 ## Build
 
+Resolve dependencies:
+
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild -resolvePackageDependencies -project NetSpeed.xcodeproj -scheme NetSpeed
+```
+
+Build a debug copy:
+
+```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild build -project NetSpeed.xcodeproj -scheme NetSpeed -configuration Debug -destination 'platform=macOS'
 ```
 
-## Sparkle Setup
-
-NetSpeed includes Sparkle wiring and an empty `appcast.xml` for `https://github.com/anxkhn/netspeed`.
-
-Before shipping releases, replace `REPLACE_WITH_SPARKLE_PUBLIC_EDDSA_KEY` in the generated Info.plist build settings with your Sparkle EdDSA public key. Generate it after package resolution using Sparkle's `generate_keys` tool from DerivedData.
+For unsigned command-line verification, add `CODE_SIGNING_ALLOWED=NO`.
 
 ## License
 
